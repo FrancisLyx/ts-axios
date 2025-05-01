@@ -1,4 +1,5 @@
-import { AxiosRequestConfig, Axios as IAxios } from '@/types'
+import { AxiosPromise, AxiosRequestConfig, Axios as IAxios } from '@/types'
+import dispatchRequest from './dispatchRequest'
 
 export default class Axios implements IAxios {
   defaults: AxiosRequestConfig
@@ -6,12 +7,12 @@ export default class Axios implements IAxios {
     this.defaults = initConfig
   }
 
-  request(url: string, config: AxiosRequestConfig = {}): Promise<any> {
+  request(url: string | AxiosRequestConfig, config: AxiosRequestConfig = {}): AxiosPromise {
     if (typeof url === 'string') {
       config.url = url
     } else {
       config = url
     }
-    return Promise.resolve(config)
+    return dispatchRequest({ ...this.defaults, ...config })
   }
 }
