@@ -62,8 +62,3 @@ $ npm run pub
 ## 许可证
 
 vite-ts-lib-starter 是根据 MIT 许可证发布的。
-
-
-## 联系方式
-
-我的邮箱是 `ericwxy@foxmail.com` 多多交流哦。

@@ -4,14 +4,14 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     lib: {
-      entry: './src/index.ts',
-      name: 'ts-lib',
-      fileName: 'ts-lib'
+      entry: './lib/index.ts',
+      name: 'ts-axios',
+      fileName: 'ts-axios'
     }
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(__dirname, 'lib')
     }
   }
 })
