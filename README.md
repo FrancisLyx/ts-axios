@@ -18,12 +18,16 @@
 - [x] 定义 AxiosResponse 接口
 - [x] 定义 AxiosError 接口
 - [x] 定义 AxiosPromise 接口
+- [x] 定义 AxiosErrorCode 类型
 
 ### 3. 核心功能
 
 - [x] 实现 Axios 类
 - [x] 实现 createInstance 工厂函数
 - [x] 实现 request 方法
+- [x] 实现错误处理机制
+- [x] 实现错误代码常量
+- [x] 实现错误创建工厂函数
 
 ## 项目结构
 

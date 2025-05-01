@@ -1,5 +1,6 @@
 import { AxiosPromise, AxiosRequestConfig, Axios as IAxios } from '@/types'
 import dispatchRequest from './dispatchRequest'
+import mergeConfig from './mergeConfig'
 
 export default class Axios implements IAxios {
   defaults: AxiosRequestConfig
@@ -13,6 +14,8 @@ export default class Axios implements IAxios {
     } else {
       config = url
     }
-    return dispatchRequest({ ...this.defaults, ...config })
+
+    config = mergeConfig(this.defaults, config)
+    return dispatchRequest(config)
   }
 }
