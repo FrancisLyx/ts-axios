@@ -1,10 +1,26 @@
 import { AxiosRequestConfig, AxiosPromise, AxiosResponse } from '@/types'
 import { createError, ErrorCodes } from '@/core/AxiosError'
-
+import { buildUrl, combineURLs, isAbsoluteURL } from '@/helpers/utils'
+import { flattenHeaders } from '@/helpers/headers'
 export default function dispatchRequest(config: AxiosRequestConfig): AxiosPromise {
+  // config 参数预处理
+  processConfig(config)
   return xhr(config)
 }
 
+function processConfig(config: AxiosRequestConfig) {
+  config.url = transformUrl(config)
+  config.headers = flattenHeaders(config.headers, config.method!)
+}
+
+function transformUrl(config: AxiosRequestConfig): string {
+  const { url, params, baseURL, paramsSerializer } = config
+  // baseUrl通用请求地址，如果提供了baseUrl,并且url是一个绝对路径，那么就需要拼接，如果url不是一个绝对路径，那么直接使用url进行请求。
+  let fullUrl = baseURL && !isAbsoluteURL(url!) ? combineURLs(baseURL, url) : url
+  return buildUrl(fullUrl!, params, paramsSerializer)
+}
+
+// 发送请求
 function xhr(config: AxiosRequestConfig): AxiosPromise {
   return new Promise((resolve, reject) => {
     const { data, url, method = 'get', headers = {} } = config

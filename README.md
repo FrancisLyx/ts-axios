@@ -29,6 +29,13 @@
 - [x] 实现错误代码常量
 - [x] 实现错误创建工厂函数
 
+### 4. 配置合并与请求处理优化（新增）
+
+- [x] headers 支持智能合并，自动规范化字段名，支持深层结构，去除无效值
+- [x] url 支持 baseURL 拼接、绝对路径判断、斜杠处理
+- [x] 支持 params 查询参数自动拼接到 url
+- [x] 支持自定义 paramsSerializer
+
 ## 项目结构
 
 ```
@@ -51,10 +58,7 @@ export interface AxiosRequestConfig {
   method?: string
   data?: any
   params?: any
-}
-
-export interface AxiosInstance {
-  (config: AxiosRequestConfig): Promise<any>
+  // ... 其他配置项 ...
 }
 ```
 
@@ -96,6 +100,64 @@ export default axios
 import axios from './axios'
 export default axios
 ```
+
+---
+
+### 5. 配置合并与请求处理优化（新增）
+
+#### headers 合并优化
+
+- headers 现在支持更智能的合并，默认配置和自定义配置会合并，后者优先。
+- 支持大小写不敏感，自动规范化 header 字段名。
+- 支持深层结构（如 headers.common、headers.get、headers.post 等）。
+- 合并后会自动去除无效值（如 undefined/null）。
+
+**示例：**
+
+```typescript
+axios({
+  headers: {
+    common: { 'X-Custom-Header': 'foo' },
+    post: { 'Content-Type': 'application/json' }
+  }
+})
+```
+
+#### url 处理优化
+
+- 支持 baseURL 和相对路径的自动拼接。
+- 如果 url 是绝对路径，则不会拼接 baseURL。
+- 自动处理斜杠，避免重复或缺失。
+- 支持 params 查询参数自动拼接到 url 上。
+- 支持自定义 paramsSerializer。
+
+**示例：**
+
+```typescript
+axios({
+  baseURL: 'https://api.example.com/',
+  url: '/user',
+  params: { id: 123 }
+})
+// 实际请求: https://api.example.com/user?id=123
+```
+
+#### 进阶用法
+
+- 你可以通过 paramsSerializer 自定义查询参数的序列化方式：
+
+```typescript
+import qs from 'qs'
+
+axios({
+  url: '/user',
+  params: { id: 123, tags: ['a', 'b'] },
+  paramsSerializer: (params) => qs.stringify(params, { arrayFormat: 'repeat' })
+})
+// 实际请求: /user?id=123&tags=a&tags=b
+```
+
+---
 
 ## 开发环境配置
 
