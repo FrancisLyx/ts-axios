@@ -16,7 +16,7 @@ function processConfig(config: AxiosRequestConfig) {
   config.headers = flattenHeaders(config.headers, config.method!)
 }
 
-function transformUrl(config: AxiosRequestConfig): string {
+export function transformUrl(config: AxiosRequestConfig): string {
   const { url, params, baseURL, paramsSerializer } = config
   // baseUrl通用请求地址，如果提供了baseUrl,并且url是一个绝对路径，那么就需要拼接，如果url不是一个绝对路径，那么直接使用url进行请求。
   let fullUrl = baseURL && !isAbsoluteURL(url!) ? combineURLs(baseURL, url) : url

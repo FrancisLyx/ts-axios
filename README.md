@@ -15,6 +15,7 @@
 
 - [x] 定义 AxiosRequestConfig 接口
 - [x] 定义 AxiosInstance 接口
+- [x] 定义 AxiosStatic 接口
 - [x] 定义 AxiosResponse 接口
 - [x] 定义 AxiosError 接口
 - [x] 定义 AxiosPromise 接口
@@ -28,6 +29,7 @@
 - [x] 实现错误处理机制
 - [x] 实现错误代码常量
 - [x] 实现错误创建工厂函数
+- [x] 实现静态方法（create、all、spread）
 
 ### 4. 配置合并与请求处理优化
 
@@ -58,7 +60,8 @@ lib/
 ├── types.ts      # 类型定义
 ├── index.ts      # 入口文件
 ├── core/         # 核心实现
-│   └── axios.ts  # Axios 类实现
+│   ├── axios.ts  # Axios 类实现
+│   └── mergeConfig.ts # 配置合并
 └── adapters/     # 适配器实现
     ├── fetch.ts  # fetch 适配器
     └── http.ts   # http 适配器
@@ -72,10 +75,23 @@ lib/
 // lib/types.ts
 export interface AxiosRequestConfig {
   url?: string
-  method?: string
+  method?: Method
   data?: any
   params?: any
   // ... 其他配置项 ...
+}
+
+export interface AxiosInstance {
+  (config: AxiosRequestConfig): Promise<any>
+  (url: string, config?: AxiosRequestConfig): Promise<any>
+  defaults: AxiosRequestConfig
+  request<T = any>(config: AxiosRequestConfig): AxiosPromise<T>
+}
+
+export interface AxiosStatic extends AxiosInstance {
+  create(config?: AxiosRequestConfig): AxiosInstance
+  all<T>(promises: Array<T | Promise<T>>): Promise<T[]>
+  spread<T, R>(callback: (...args: T[]) => R): (arr: T[]) => R
 }
 ```
 
@@ -83,115 +99,89 @@ export interface AxiosRequestConfig {
 
 ```typescript
 // lib/core/axios.ts
-import { AxiosRequestConfig } from '@/types'
-
 class Axios {
-  constructor(config: AxiosRequestConfig) {
-    // 初始化配置
+  defaults: AxiosRequestConfig
+  constructor(initConfig: AxiosRequestConfig) {
+    this.defaults = initConfig
+    this._eachMethodNoData()
+    this._eachMethodWithData()
+  }
+
+  request(url: string | AxiosRequestConfig, config: AxiosRequestConfig = {}): AxiosPromise {
+    // ... 实现细节
   }
 }
-
-export default Axios
 ```
 
 ### 3. 实例工厂
 
 ```typescript
 // lib/axios.ts
-import type { AxiosInstance, AxiosRequestConfig } from '@/types'
-import Axios from '@/core/axios'
-
-function createInstance(config: AxiosRequestConfig): AxiosInstance {
+function createInstance(config: AxiosRequestConfig): AxiosStatic {
   const context = new Axios(config)
-  return context as AxiosInstance
+  const instance = Axios.prototype.request.bind(context)
+  extend(instance, Axios.prototype, context)
+  extend(instance, context)
+
+  return instance as AxiosStatic
 }
 
-const axios = createInstance({})
-export default axios
-```
+const axios = createInstance(_default)
 
-### 4. 入口文件
+// 添加静态方法
+axios.create = function create(config: AxiosRequestConfig) {
+  return createInstance(mergeConfig(_default, config))
+}
 
-```typescript
-// lib/index.ts
-import axios from './axios'
-export default axios
-```
+axios.all = function all(promises: any[]) {
+  return Promise.all(promises)
+}
 
----
-
-### 5. 配置合并与请求处理优化
-
-#### headers 合并优化
-
-- headers 现在支持更智能的合并，默认配置和自定义配置会合并，后者优先。
-- 支持大小写不敏感，自动规范化 header 字段名。
-- 支持深层结构（如 headers.common、headers.get、headers.post 等）。
-- 合并后会自动去除无效值（如 undefined/null）。
-
-**示例：**
-
-```typescript
-axios({
-  headers: {
-    common: { 'X-Custom-Header': 'foo' },
-    post: { 'Content-Type': 'application/json' }
+axios.spread = function spread(callback: (...args: any[]) => any) {
+  return function wrap(arr: any[]) {
+    return callback.apply(null, arr)
   }
-})
+}
 ```
 
-#### url 处理优化
-
-- 支持 baseURL 和相对路径的自动拼接。
-- 如果 url 是绝对路径，则不会拼接 baseURL。
-- 自动处理斜杠，避免重复或缺失。
-- 支持 params 查询参数自动拼接到 url 上。
-- 支持自定义 paramsSerializer。
-
-**示例：**
+### 4. 使用示例
 
 ```typescript
-axios({
-  baseURL: 'https://api.example.com/',
-  url: '/user',
-  params: { id: 123 }
-})
-// 实际请求: https://api.example.com/user?id=123
-```
-
-#### 进阶用法
-
-- 你可以通过 paramsSerializer 自定义查询参数的序列化方式：
-
-```typescript
-import qs from 'qs'
-
+// 基本使用
 axios({
   url: '/user',
-  params: { id: 123, tags: ['a', 'b'] },
-  paramsSerializer: (params) => qs.stringify(params, { arrayFormat: 'repeat' })
+  method: 'get'
 })
-// 实际请求: /user?id=123&tags=a&tags=b
-```
 
----
+// 快捷方法
+axios.get('/user')
+axios.post('/user', { name: 'test' })
+
+// 创建实例
+const instance = axios.create({
+  baseURL: 'https://api.example.com'
+})
+
+// 并发请求
+axios.all([axios.get('/user'), axios.get('/posts')]).then(
+  axios.spread((user, posts) => {
+    // 处理响应
+  })
+)
+```
 
 ## 开发环境配置
 
 ### TypeScript 配置
 
 ```json
-// tsconfig.json
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "es2015",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./lib/*"]
+      "@/*": ["lib/*"]
     }
-  },
-  "include": ["lib"]
+  }
 }
 ```
 
