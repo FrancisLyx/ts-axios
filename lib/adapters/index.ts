@@ -19,24 +19,20 @@ export default {
 
     const { length } = adapters
 
-    let nameOrAdapter: Adapter
+    let nameOfAdapter: Adapter
     let adapter: ((config: AxiosRequestConfig) => AxiosPromise) | boolean | undefined
-
+    // iterate adapters，get the specific adapter
     for (let i = 0; i < length; i++) {
-      nameOrAdapter = adapters[i]
-      if (
-        (adapter = isString(nameOrAdapter)
-          ? knownAdapters[nameOrAdapter.toLowerCase()]
-          : nameOrAdapter)
-      )
-        break
+      nameOfAdapter = adapters[i]
+      adapter = isString(nameOfAdapter) ? knownAdapters[nameOfAdapter.toLowerCase()] : nameOfAdapter
+      if (adapter) break
     }
     if (!adapter) {
       if (adapter === false) {
-        throw new Error(`Adapter ${nameOrAdapter} is not supported in this environment`)
+        throw new Error(`Adapter ${nameOfAdapter} is not supported in this environment`)
       }
       throw new Error(
-        `Unkonwn adapter ${nameOrAdapter} is specified` +
+        `Unkonwn adapter ${nameOfAdapter} is specified` +
           `\nWe know these adapters inside the environment: ${Object.keys(knownAdapters).join(
             ', '
           )}`
