@@ -30,8 +30,11 @@ export interface AxiosRequestConfig {
   params?: any
   headers?: IHeaders | null
   baseURL?: string
+  timeout?: number
+  responseType?: XMLHttpRequestResponseType
   validateStatus?: (status: number) => boolean
   paramsSerializer?: (params: params) => string
+  adapter?: 'http' | 'xhr' | 'fetch' | ((config: AxiosRequestConfig) => AxiosPromise)
 }
 
 export interface AxiosResponse<T = any> {

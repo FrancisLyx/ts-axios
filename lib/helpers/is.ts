@@ -16,6 +16,7 @@ export const isUndefined = typeofTest('undefined') as (thing: unknown) => thing 
 export const isObject = (thing: unknown): thing is Object => {
   return thing !== null && typeof thing === 'object' && !Array.isArray(thing)
 }
+
 export const isArray = <T = any>(thing: unknown): thing is T[] => Array.isArray(thing)
 
 export const isNil = (thing: unknown): thing is null | undefined => thing == null
