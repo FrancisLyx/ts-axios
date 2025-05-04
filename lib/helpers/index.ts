@@ -56,12 +56,26 @@ export const deepMerge = (...args: any[]): any => {
   return result
 }
 
+/**
+ * 绑定函数到指定的上下文对象
+ * @param fn 要绑定的函数
+ * @param thisArg 上下文对象
+ * @returns 绑定后的包装函数
+ */
+
 function _bind(fn: Function, thisArg: unknown) {
   return function wrap() {
     return fn.apply(thisArg, arguments)
   }
 }
 
+/**
+ * 将一个对象的属性扩展到另一个对象
+ * @param to 目标对象
+ * @param from 源对象
+ * @param thisArg 上下文对象
+ * @returns 扩展后的目标对象
+ */
 export function extend<T, U>(to: T, from: U, thisArg?: unknown): T & U {
   for (const key in from) {
     if (thisArg && typeof from[key] === 'function') {
