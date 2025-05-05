@@ -1,216 +1,382 @@
 # ts-axios
 
-一个基于 TypeScript 实现的 axios 库。
+一个基于 TypeScript 实现的 axios 库，支持请求/响应拦截器、请求配置、响应数据转换等功能。
 
-## 已实现功能
+## 功能特性
 
-### 1. 基础配置
+- 支持浏览器和 Node.js 环境
+- 支持 Promise API
+- 支持请求和响应拦截器
+- 支持请求配置
+- 支持响应数据转换
+- 支持错误处理
+- 支持取消请求
+- 支持 XSRF 防御
+- 支持上传和下载进度监控
+- 支持 HTTP 授权
+- 支持自定义合法状态码
+- 支持自定义参数序列化
+- 支持 baseURL 配置
+- 支持实例方法
 
-- [x] 初始化项目结构
-- [x] 配置 TypeScript
-- [x] 设置路径别名
-- [x] 配置开发环境
+## 安装
 
-### 2. 类型系统
-
-- [x] 定义 AxiosRequestConfig 接口
-- [x] 定义 AxiosInstance 接口
-- [x] 定义 AxiosStatic 接口
-- [x] 定义 AxiosResponse 接口
-- [x] 定义 AxiosError 接口
-- [x] 定义 AxiosPromise 接口
-- [x] 定义 AxiosErrorCode 类型
-
-### 3. 核心功能
-
-- [x] 实现 Axios 类
-- [x] 实现 createInstance 工厂函数
-- [x] 实现 request 方法
-- [x] 实现错误处理机制
-- [x] 实现错误代码常量
-- [x] 实现错误创建工厂函数
-- [x] 实现静态方法（create、all、spread）
-
-### 4. 配置合并与请求处理优化
-
-- [x] headers 支持智能合并，自动规范化字段名，支持深层结构，去除无效值
-- [x] url 支持 baseURL 拼接、绝对路径判断、斜杠处理
-- [x] 支持 params 查询参数自动拼接到 url
-- [x] 支持自定义 paramsSerializer
-
-### 5. 适配器系统
-
-- [x] 实现 fetch 适配器（浏览器环境）
-  - 支持请求超时
-  - 支持不同的响应类型（text/json）
-  - 支持请求取消
-  - 自动处理请求头和响应头
-- [x] 实现 http 适配器（Node.js 环境）
-  - 支持 HTTP/HTTPS 请求
-  - 支持请求超时
-  - 支持请求取消
-  - 自动处理请求头和响应头
-  - 支持流式响应数据处理
-
-## 项目结构
-
-```
-lib/
-├── axios.ts      # axios 实例工厂
-├── types.ts      # 类型定义
-├── index.ts      # 入口文件
-├── core/         # 核心实现
-│   ├── axios.ts  # Axios 类实现
-│   └── mergeConfig.ts # 配置合并
-└── adapters/     # 适配器实现
-    ├── fetch.ts  # fetch 适配器
-    └── http.ts   # http 适配器
+```bash
+npm install ts-axios
 ```
 
-## 功能实现
+## 使用方法
 
-### 1. 类型定义
-
-```typescript
-// lib/types.ts
-export interface AxiosRequestConfig {
-  url?: string
-  method?: Method
-  data?: any
-  params?: any
-  // ... 其他配置项 ...
-}
-
-export interface AxiosInstance {
-  (config: AxiosRequestConfig): Promise<any>
-  (url: string, config?: AxiosRequestConfig): Promise<any>
-  defaults: AxiosRequestConfig
-  request<T = any>(config: AxiosRequestConfig): AxiosPromise<T>
-}
-
-export interface AxiosStatic extends AxiosInstance {
-  create(config?: AxiosRequestConfig): AxiosInstance
-  all<T>(promises: Array<T | Promise<T>>): Promise<T[]>
-  spread<T, R>(callback: (...args: T[]) => R): (arr: T[]) => R
-}
-```
-
-### 2. 核心实现
-
-```typescript
-// lib/core/axios.ts
-class Axios {
-  defaults: AxiosRequestConfig
-  constructor(initConfig: AxiosRequestConfig) {
-    this.defaults = initConfig
-    this._eachMethodNoData()
-    this._eachMethodWithData()
-  }
-
-  request(url: string | AxiosRequestConfig, config: AxiosRequestConfig = {}): AxiosPromise {
-    // ... 实现细节
-  }
-}
-```
-
-### 3. 实例工厂
-
-```typescript
-// lib/axios.ts
-function createInstance(config: AxiosRequestConfig): AxiosStatic {
-  const context = new Axios(config)
-  const instance = Axios.prototype.request.bind(context)
-  extend(instance, Axios.prototype, context)
-  extend(instance, context)
-
-  return instance as AxiosStatic
-}
-
-const axios = createInstance(_default)
-
-// 添加静态方法
-axios.create = function create(config: AxiosRequestConfig) {
-  return createInstance(mergeConfig(_default, config))
-}
-
-axios.all = function all(promises: any[]) {
-  return Promise.all(promises)
-}
-
-axios.spread = function spread(callback: (...args: any[]) => any) {
-  return function wrap(arr: any[]) {
-    return callback.apply(null, arr)
-  }
-}
-```
-
-### 4. 使用示例
-
-```typescript
-// 基本使用
-axios({
-  url: '/user',
-  method: 'get'
-})
-
-// 快捷方法
-axios.get('/user')
-axios.post('/user', { name: 'test' })
-
-// 创建实例
-const instance = axios.create({
-  baseURL: 'https://api.example.com'
-})
-
-// 并发请求
-axios.all([axios.get('/user'), axios.get('/posts')]).then(
-  axios.spread((user, posts) => {
-    // 处理响应
-  })
-)
-```
-
-## 开发环境配置
-
-### TypeScript 配置
-
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["lib/*"]
-    }
-  }
-}
-```
-
-## 使用
+### 基本使用
 
 ```typescript
 import axios from 'ts-axios'
 
+// 发起 GET 请求
 axios({
   url: '/api/user',
   method: 'get',
   params: {
     id: 1
   }
+}).then((res) => {
+  console.log(res)
+})
+
+// 发起 POST 请求
+axios({
+  url: '/api/user',
+  method: 'post',
+  data: {
+    name: 'test'
+  }
+}).then((res) => {
+  console.log(res)
 })
 ```
 
-## 开发命令
+### 请求方法别名
 
-```shell
-# 启动开发服务器
-$ npm run dev
+```typescript
+// 发起 GET 请求
+axios.get('/api/user', {
+  params: {
+    id: 1
+  }
+})
+
+// 发起 POST 请求
+axios.post('/api/user', {
+  name: 'test'
+})
+
+// 发起 PUT 请求
+axios.put('/api/user', {
+  name: 'test'
+})
+
+// 发起 DELETE 请求
+axios.delete('/api/user', {
+  params: {
+    id: 1
+  }
+})
+```
+
+### 创建实例
+
+```typescript
+const instance = axios.create({
+  baseURL: 'https://api.example.com',
+  timeout: 5000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 使用实例发起请求
+instance.get('/user')
+```
+
+### 拦截器
+
+```typescript
+// 请求拦截器
+axios.interceptors.request.use(
+  (config) => {
+    // 在发送请求之前做些什么
+    // 例如：添加 token
+    config.headers['Authorization'] = 'Bearer token123'
+    return config
+  },
+  (error) => {
+    // 对请求错误做些什么
+    return Promise.reject(error)
+  }
+)
+
+// 响应拦截器
+axios.interceptors.response.use(
+  (response) => {
+    // 对响应数据做点什么
+    // 例如：统一处理响应格式
+    if (response.data.code === 0) {
+      return response.data.data
+    }
+    return Promise.reject(response.data)
+  },
+  (error) => {
+    // 对响应错误做点什么
+    // 例如：统一处理错误
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          // 未授权，跳转到登录页
+          break
+        case 403:
+          // 权限不足
+          break
+        case 404:
+          // 请求的资源不存在
+          break
+        case 500:
+          // 服务器错误
+          break
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+// 移除拦截器
+const requestInterceptor = axios.interceptors.request.use((config) => {
+  return config
+})
+axios.interceptors.request.eject(requestInterceptor)
+
+// 移除所有拦截器
+axios.interceptors.request.clear()
+axios.interceptors.response.clear()
+```
+
+### 并发请求
+
+```typescript
+axios.all([axios.get('/api/user'), axios.get('/api/order')]).then(
+  axios.spread((userRes, orderRes) => {
+    console.log(userRes, orderRes)
+  })
+)
+```
+
+## 请求配置
+
+```typescript
+{
+  // 请求的服务器 URL
+  url: '/user',
+
+  // 请求方法
+  method: 'get',
+
+  // 请求基础 URL
+  baseURL: 'https://api.example.com',
+
+  // 请求头
+  headers: {
+    'Content-Type': 'application/json'
+  },
+
+  // URL 参数
+  params: {
+    id: 1
+  },
+
+  // 请求体数据
+  data: {
+    name: 'test'
+  },
+
+  // 请求超时时间
+  timeout: 5000,
+
+  // 响应数据类型
+  responseType: 'json',
+
+  // 上传进度回调
+  onUploadProgress: progressEvent => {
+    console.log(progressEvent)
+  },
+
+  // 下载进度回调
+  onDownloadProgress: progressEvent => {
+    console.log(progressEvent)
+  },
+
+  // 自定义合法状态码
+  validateStatus: status => {
+    return status >= 200 && status < 300
+  }
+}
+```
+
+## 响应数据结构
+
+```typescript
+{
+  // 服务器返回的数据
+  data: {},
+
+  // HTTP 状态码
+  status: 200,
+
+  // HTTP 状态信息
+  statusText: 'OK',
+
+  // 响应头
+  headers: {},
+
+  // 请求配置
+  config: {},
+
+  // 请求实例
+  request?: any
+}
+```
+
+## 错误处理
+
+```typescript
+axios.get('/api/user').catch((error) => {
+  if (error.response) {
+    // 请求已发出，服务器返回状态码超出 2xx 范围
+    console.log(error.response.data)
+    console.log(error.response.status)
+    console.log(error.response.headers)
+  } else if (error.request) {
+    // 请求已发出，但没有收到响应
+    console.log(error.request)
+  } else {
+    // 发送请求时发生错误
+    console.log('Error', error.message)
+  }
+  console.log(error.config)
+})
+```
+
+## 取消请求
+
+```typescript
+const CancelToken = axios.CancelToken
+const source = CancelToken.source()
+
+axios
+  .get('/api/user', {
+    cancelToken: source.token
+  })
+  .catch((error) => {
+    if (axios.isCancel(error)) {
+      console.log('请求已取消', error.message)
+    }
+  })
+
+// 取消请求
+source.cancel('操作被用户取消')
+```
+
+## 项目结构
+
+```
+├── lib
+│   ├── axios.ts              # 入口文件
+│   ├── core
+│   │   ├── Axios.ts          # Axios 类
+│   │   ├── AxiosError.ts     # 错误类
+│   │   ├── dispatchRequest.ts # 请求分发
+│   │   ├── InterceptorManager.ts # 拦截器管理
+│   │   └── transform.ts      # 数据转换
+│   ├── defaults.ts           # 默认配置
+│   ├── helpers
+│   │   ├── bind.ts           # 绑定函数
+│   │   ├── buildURL.ts       # 构建 URL
+│   │   ├── cookie.ts         # Cookie 处理
+│   │   ├── data.ts           # 数据处理
+│   │   ├── error.ts          # 错误处理
+│   │   ├── headers.ts        # 请求头处理
+│   │   └── url.ts            # URL 处理
+│   └── types.ts              # 类型定义
+├── examples                   # 示例代码
+├── test                      # 测试文件
+├── package.json
+└── tsconfig.json
+```
+
+## 类型定义
+
+```typescript
+// 请求配置接口
+interface AxiosRequestConfig {
+  url?: string
+  method?: Method
+  baseURL?: string
+  headers?: any
+  params?: any
+  data?: any
+  timeout?: number
+  responseType?: XMLHttpRequestResponseType
+  onUploadProgress?: (e: ProgressEvent) => void
+  onDownloadProgress?: (e: ProgressEvent) => void
+  validateStatus?: (status: number) => boolean
+  paramsSerializer?: (params: any) => string
+  withCredentials?: boolean
+  xsrfCookieName?: string
+  xsrfHeaderName?: string
+  onDownloadProgress?: (e: ProgressEvent) => void
+  onUploadProgress?: (e: ProgressEvent) => void
+  auth?: AxiosBasicCredentials
+  cancelToken?: CancelToken
+}
+
+// 响应数据接口
+interface AxiosResponse<T = any> {
+  data: T
+  status: number
+  statusText: string
+  headers: any
+  config: AxiosRequestConfig
+  request?: any
+}
+
+// 拦截器接口
+interface AxiosInterceptorManager<T> {
+  use(resolved: ResolvedFn<T>, rejected?: RejectedFn): number
+  eject(id: number): void
+  clear(): void
+}
+
+// 拦截器管理接口
+interface Interceptors {
+  request: AxiosInterceptorManager<AxiosRequestConfig>
+  response: AxiosInterceptorManager<AxiosResponse>
+}
+```
+
+## 开发
+
+```bash
+# 安装依赖
+npm install
 
 # 运行测试
-$ npm run test
+npm test
 
 # 构建
-$ npm run build
+npm run build
 ```
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request。
 
 ## 许可证
 
