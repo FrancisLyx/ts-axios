@@ -284,6 +284,30 @@ axios
 source.cancel('操作被用户取消')
 ```
 
+### CancelToken 说明
+
+- `CancelToken` 用于实现请求的取消功能。
+- 通过 `CancelToken.source()` 可以方便地创建一对 `{ token, cancel }`，用于发起和取消请求。
+- `token` 传递给请求配置，`cancel` 用于在需要时取消请求。
+- 取消时会触发 Promise 的完成状态，并传递取消原因。
+- `CancelToken` 内部有 `reason` 属性，记录取消原因，防止重复取消。
+- `throwIfRequested()` 方法：可在请求前手动调用，如果已取消会抛出异常，常用于自定义中断逻辑。
+
+#### 示例：throwIfRequested
+
+```typescript
+const source = CancelToken.source()
+
+// 某些场景下主动检测是否已取消
+source.token.throwIfRequested() // 如果已取消会抛出异常
+```
+
+### 原理简述
+
+- `CancelToken` 构造时会立即执行传入的 executor 函数。
+- 通过 Promise 机制实现异步取消通知。
+- 只要调用 cancel，所有监听该 token 的请求都会收到取消信号。
+
 ## 项目结构
 
 ```
